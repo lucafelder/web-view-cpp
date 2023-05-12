@@ -150,30 +150,52 @@ endif
 
 deploy: $(APP_NAME).app
 ifeq '$(CONFIG_BOARD)' 'raspi-cam'
-	tar c $< | ssh pi@$(CONFIG_TARGET_IP) 'rm -rf $< && tar x > /dev/null 2>&1' || true
+	tar c $< | ssh ebv 'rm -rf $< && tar x > /dev/null 2>&1' || true
 else	
 	tar c $< | ssh root@$(CONFIG_TARGET_IP) 'rm -rf $< && tar x -C $(DEPLOY_DIR)' || true
 endif
 
+# lfe tar c $< | ssh pi@$(CONFIG_TARGET_IP) 'rm -rf $< && tar x > /dev/null 2>&1' || true
+
 run:
 ifeq '$(CONFIG_BOARD)' 'raspi-cam'
-	ssh pi@$(CONFIG_TARGET_IP) /home/pi/$(APP_NAME).app/run.sh || true
+	ssh ebv /home/pi/$(APP_NAME).app/run.sh || true
 else
 	ssh root@$(CONFIG_TARGET_IP) $(DEPLOY_DIR)$(APP_NAME).app/run.sh || true
 endif
+# lfe ssh pi@$(CONFIG_TARGET_IP) /home/pi/$(APP_NAME).app/run.sh || true
 
 rundbg:
 ifeq '$(CONFIG_BOARD)' 'raspi-cam'
-	ssh pi@$(CONFIG_TARGET_IP) 'killall app;  gdbserver localhost:8888 /home/pi/$(APP_NAME).app/app' || true
+	ssh ebv 'killall app;  gdbserver localhost:8888 /home/pi/$(APP_NAME).app/app' || true
 else
 	ssh root@$(CONFIG_TARGET_IP) $(DEPLOY_DIR)$(APP_NAME).app/run.sh || true
 endif
+# lfe ssh pi@$(CONFIG_TARGET_IP) 'killall app;  gdbserver localhost:8888 /home/pi/$(APP_NAME).app/app' || true
 
+dad: $(APP_NAME).app
+ifeq '$(CONFIG_BOARD)' 'raspi-cam'
+	tar c $< | ssh ebv 'rm -rf $< && tar x > /dev/null 2>&1' || true
+	ssh ebv 'killall app;  gdbserver localhost:8888 /home/pi/$(APP_NAME).app/app' || true
+else	
+	tar c $< | ssh root@$(CONFIG_TARGET_IP) 'rm -rf $< && tar x -C $(DEPLOY_DIR)' || true
+	ssh root@$(CONFIG_TARGET_IP) $(DEPLOY_DIR)$(APP_NAME).app/run.sh || true
+endif
+
+dar: $(APP_NAME).app
+ifeq '$(CONFIG_BOARD)' 'raspi-cam'
+	tar c $< | ssh ebv 'rm -rf $< && tar x > /dev/null 2>&1' || true
+	ssh ebv /home/pi/$(APP_NAME).app/run.sh || true
+else	
+	tar c $< | ssh root@$(CONFIG_TARGET_IP) 'rm -rf $< && tar x -C $(DEPLOY_DIR)' || true
+	ssh root@$(CONFIG_TARGET_IP) $(DEPLOY_DIR)$(APP_NAME).app/run.sh || true
+endif
 
 settime:
 ifeq '$(CONFIG_BOARD)' 'raspi-cam'
-	ssh pi@192.168.1.10 sudo date -s @`( date -u +"%s" )`
+	ssh ebv sudo date -s @`( date -u +"%s" )`
 endif   
+# lfe ssh pi@192.168.1.10 sudo date -s @`( date -u +"%s" )`
                         
 
 install: cgi/cgi_host
