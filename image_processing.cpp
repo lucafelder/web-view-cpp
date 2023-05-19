@@ -29,6 +29,7 @@ int CImageProcessor::DoProcess(cv::Mat* image) {
 
 	cv::Mat grayImage;
 	static cv::Mat mPrevImage;	
+	static cv::Mat mBkgrImage;
         
 	if(image->channels() > 1) {
 		cv::cvtColor( *image, grayImage, cv::COLOR_RGB2GRAY );
@@ -41,10 +42,14 @@ int CImageProcessor::DoProcess(cv::Mat* image) {
 	// ------------------------------------------------------------
 
 	cv::Mat diffImage;
+	double alpha = 0.9;
 
-	if (mPrevImage.size() != cv::Size()) {
-		cv::absdiff(mPrevImage, grayImage, diffImage);
-		*m_proc_image[0] = diffImage;
+	if (mBkgrImage.size() != cv::Size()) {
+		
+		cv::addWeighted(mBkgrImage, alpha, grayImage, 1 - alpha, 0, mBkgrImage);
+		cv::absdiff(mBkgrImage, grayImage, diffImage);
+
+		*m_proc_image[0] = mBkgrImage;
 
 		// ------------------------------------------------------------	
 		// Binarisierung
@@ -87,6 +92,8 @@ int CImageProcessor::DoProcess(cv::Mat* image) {
 
 		*m_proc_image[2] = resultImage;
 
+	} else {
+		mBkgrImage = grayImage.clone();
 	}
 
 	mPrevImage = grayImage.clone();
