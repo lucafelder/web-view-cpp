@@ -27,6 +27,8 @@ int CImageProcessor::DoProcess(cv::Mat* image) {
 
 	if(!image) return(EINVALID_PARAMETER);
 
+	int64 startTic = cv::getTickCount();
+
 	const double threshold = 70;
 	static int maxIndex = 50;
 	const uint8_t maxIndex_2 = maxIndex/2;
@@ -78,6 +80,7 @@ int CImageProcessor::DoProcess(cv::Mat* image) {
 	cv::Mat backgnd(grayImage.size(), CV_8U);
 	cv::Mat foregnd_raw(grayImage.size(), CV_8U);
 	cv::Mat foregnd(grayImage.size(), CV_8U);
+	cv::Mat resultImage(grayImage.size(), CV_8U);
 
 	for(int rows = 0; rows < imgDx.rows; rows++) {
 
@@ -139,89 +142,64 @@ int CImageProcessor::DoProcess(cv::Mat* image) {
 			} 
 			backgnd.at<uint8>(rows, cols) = maxBkgrIndex;
 			foregnd_raw.at<uint8>(rows, cols) = dirImage.at<uint8>(rows, cols)!=backgnd.at<uint8>(rows, cols);
-
-		} 
+		}
 	}
+
+	// ------------------------------------------------------------
+	// 8: Morphologische Operationen / Merkmalsextraktion
+	// ------------------------------------------------------------
+
+	int kernelSize = 5;
+	cv::Mat kernel = cv::Mat::ones(kernelSize, kernelSize, CV_8UC1);
+	cv::morphologyEx(foregnd_raw, foregnd, cv::MORPH_OPEN, kernel);
+	kernelSize = 5;
+	kernel = cv::Mat::ones(kernelSize, kernelSize, CV_8UC1);
+	cv::morphologyEx(foregnd, foregnd, cv::MORPH_CLOSE, kernel);
+
+	std::vector<std::vector<cv::Point>> contours;
+	std::vector<cv::Vec4i> hierarchy;
+	double area_min = 5;
+
+	cv::findContours(foregnd, contours, hierarchy, cv::RETR_EXTERNAL , cv::CHAIN_APPROX_SIMPLE);
+
+	resultImage = image->clone();
+	
+	for(unsigned int idx = 0 ; idx < contours.size(); idx++ ) {
+		//area
+		double area = cv::contourArea(contours[idx]);
+
+		if ( area >= area_min ) {
+
+			//bounding rectangle
+			cv::Rect rect = cv::boundingRect(contours[idx]);
+
+			// center of mass
+			cv::Moments moment = cv::moments(contours[idx]);
+			double cx = moment.m10 / moment.m00;
+			double cy = moment.m01 / moment.m00;
+
+			cv::circle(resultImage, cv::Point(cx, cy), 2, cv::Scalar(0, 0, 255), -1);
+			
+			//to draw counter to index idx in image
+			cv::drawContours(resultImage, contours, idx, cv::Scalar(255), 1, 8 );
+		}
+	}
+
+	// ------------------------------------------------------------
+	// 9: Zeitmessung
+	// ------------------------------------------------------------
+
+	int64 endTic = cv::getTickCount();
+	double deltaTime = (double) (endTic - startTic)/cv::getTickFrequency();
+	std::cout << "time:" << (int) (1000*deltaTime) << " ms" << std::endl;
+
+	// ------------------------------------------------------------
+	// AUSGABE
+	// ------------------------------------------------------------
+
 	*m_proc_image[0] = colorImage;
 	*m_proc_image[1] = foregnd_raw;
-	*m_proc_image[2] = foregnd;
-
-
-
-
-	// OLD ------------------------------------------------------
-    /*  
-	if(image->channels() > 1) {
-		cv::cvtColor( *image, grayImage, cv::COLOR_RGB2GRAY );
-	} else {
-		grayImage = *image;
-	}
-
-	// ------------------------------------------------------------
-	// Differenzbild
-	// ------------------------------------------------------------
-
-	cv::Mat diffImage;
-	double alpha = 0.9;
-
-	if (mBkgrImage.size() != cv::Size()) {
-		
-		cv::addWeighted(mBkgrImage, alpha, grayImage, 1 - alpha, 0, mBkgrImage);
-		cv::absdiff(mBkgrImage, grayImage, diffImage);
-
-		*m_proc_image[0] = mBkgrImage;
-
-		// ------------------------------------------------------------	
-		// Binarisierung
-		// ------------------------------------------------------------
-
-		cv::Mat binaryImage;
-		double threshold =30;
-
-		cv::threshold(diffImage, binaryImage, threshold, 255, cv::THRESH_BINARY);
-		*m_proc_image[1] = binaryImage;
-
-		// ------------------------------------------------------------
-		// Morphologie
-		// ------------------------------------------------------------
-
-		cv::Mat kernel = cv::Mat::ones(5, 5, CV_8UC1);
-		cv::morphologyEx(binaryImage, binaryImage, cv::MORPH_CLOSE, kernel);
-		*m_proc_image[1] = binaryImage;
-
-		cv::Mat stats, centroids, labelImage;
-		connectedComponentsWithStats(binaryImage, labelImage, stats, centroids);
-		
-
-		cv::Mat resultImage = image->clone();
-
-		for (int i = 1; i < stats.rows; i++) {
-			int topLeftx = stats.at<int>(i, 0);
-			int topLefty = stats.at<int>(i, 1);
-			int width = stats.at<int>(i, 2);
-			int height = stats.at<int>(i, 3);
-			int area = stats.at<int>(i, 4);
-			double cx = centroids.at<double>(i, 0);
-			double cy = centroids.at<double>(i, 1);
-
-			cv::Rect rect(topLeftx, topLefty, width, height);
-			cv::rectangle(resultImage, rect, cv::Scalar(255, 0, 0));
-			cv::Point2d cent(cx, cy);
-			cv::circle(resultImage, cent, 5, cv::Scalar(128, 0, 0), -1);
-		}
-
-		*m_proc_image[2] = resultImage;
-
-	} else {
-		mBkgrImage = grayImage.clone();
-	}
-
-	mPrevImage = grayImage.clone();
-	*/
-	
-
-	
-
+	*m_proc_image[2] = resultImage;
 
 	return(SUCCESS);
 }
