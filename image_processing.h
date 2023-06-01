@@ -20,9 +20,30 @@ public:
 	int DoProcess(cv::Mat* image);
 
 	cv::Mat* GetProcImage(uint32 i);
+        
+        void setStartButton(bool startButton) {m_startButton = startButton;}
+	bool getStartButton() const {return m_startButton;}
+        
+        void setValueMin(int valueMin) {m_valueMin = valueMin;}
+	int getValueMin() const {return m_valueMin;}
 
+        void setValueMax(int valueMax) {m_valueMax = valueMax;}
+	int getValueMax() const {return m_valueMax;}
+        
+        void setSaturationMin(int saturationMin) {m_saturationMin = saturationMin;}
+	int getSaturationMin() const {return m_saturationMin;}
 private:
 	cv::Mat* m_proc_image[3];/* we have three processing images for visualization available */
+        
+        int m_counter;
+        
+        bool m_startButton;  
+        
+        int m_valueMin;
+        
+        int m_valueMax;
+        
+        int m_saturationMin;
 };
 
 

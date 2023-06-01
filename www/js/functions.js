@@ -189,8 +189,16 @@ function buildControls() {
 				
 				var val=x.toFixed(0);
 				inputValues[$(this).attr("name")] = val;
-				$("#exposureTime-ms").text(x.toPrecision2(2)+" ms");
-				
+                                if ($(this).attr("name") == "exposureTime")
+                                    $("#exposureTime-ms").text(x.toPrecision2(2)+" ms");
+                                else if ($(this).attr("name") == "valueMin")
+                                    $("#valueMin-units").text(x.toFixed(0));
+                                else if ($(this).attr("name") == "valueMax")
+                                    $("#valueMax-units").text(x.toFixed(0));
+                                else if ($(this).attr("name") == "saturationMin")
+                                    $("#saturationMin-units").text(x.toFixed(0));
+                                else
+                                    ;
 				settingChanged($(this).attr("name"), val);
 			}
 		});
@@ -222,10 +230,14 @@ function parseValues(data) {
 var outputValueHooks = {
 	colorType: function (value) {
 		if (value == "gray")
+                       // document.getElementById("colorType-debayered").attr("checked", "checked");
+                       // document.getElementById("colorType-raw").attr("checked", "unchecked");
 			return "8 bit grayscale";
 		else if (value == "raw")
 			return "8 bit grayscale";
 		else if (value == "debayered")
+                    //    document.getElementById("colorType-debayered").attr("checked", "unchecked");
+                     //   document.getElementById("colorType-raw").attr("checked", "checked");
 			return "8 bit RGB";
 	},
 	imageSensor: function (value) {
@@ -247,6 +259,27 @@ var outputValueHooks = {
 		$("#exposureTime-ms").text(ival.toPrecision2(2)+" ms");
 		return(value);
 	}, 
+        valueMin: function(value) {
+		var ival=parseInt(value);
+		var x=ival/255;
+		$("#valueMin-slider").slider("option", "value", x);
+		$("#valueMin-units").text(ival);
+		return(value);
+	}, 
+        valueMax: function(value) {
+		var ival=parseInt(value);
+		var x=ival/255;
+		$("#valueMax-slider").slider("option", "value", x);
+		$("#valueMax-units").text(ival);
+		return(value);
+	},
+        saturationMin: function(value) {
+		var ival=parseInt(value);
+		var x=ival/255;
+		$("#saturationMin-slider").slider("option", "value", x);
+		$("#saturationMin-units").text(ival);
+		return(value);
+	},
 	autoExposure: function(value) {
 		ival=parseInt(value);
 		if(ival) {
@@ -256,6 +289,14 @@ var outputValueHooks = {
 		}
 		document.getElementsByName("autoExposure")[0].checked=ival;
 		return(null);
+	},
+        startButton: function(value) {
+	  	ival=parseInt(value);
+		if(ival) {			
+			$("#startButton-id").text("Stop");
+		} else {			
+			$("#startButton-id").text("Start");
+		}
 	}
 };
 
@@ -350,6 +391,20 @@ function autoExposureChanged(key, setting) {
 	} else {
 		$("#exposureTime-slider").slider("enable");
 	}
+}
+
+
+
+function startButtonChanged(key, setting) {
+        settingChanged(key, setting);
+
+        if(startButtonVal == 1) {			
+                $("#startButton-id").text("Stop");
+                startButtonVal = 0;
+        } else {			
+                $("#startButton-id").text("Start");
+                startButtonVal = 1;
+        }
 }
 
 function updateCycle() {

@@ -193,7 +193,16 @@ void CIPC::ProcessRequest(char* request) {
 						m_camera.setColorType(ColorType_debayered);
 				} else if(strcmp(key, "perspective") == 0) {
 					m_camera.setPerspective(atoi(value));
-				} 
+				} else if(strcmp(key, "startButton") == 0) {
+					m_img_process.setStartButton(!m_img_process.getStartButton());
+				} else if(strcmp(key, "valueMin") == 0) {
+					m_img_process.setValueMin(strtol(value, NULL, 10));
+				} else if(strcmp(key, "valueMax") == 0) {
+					m_img_process.setValueMax(strtol(value, NULL, 10));
+				} else if(strcmp(key, "saturationMin") == 0) {
+					m_img_process.setSaturationMin(strtol(value, NULL, 10));
+				}
+                                
 			} else {
 				*request=0;
 			}
@@ -218,8 +227,12 @@ void CIPC::ProcessRequest(char* request) {
 		}
 		WriteArgument("colorType", pEnumBuf);
 		WriteArgument("perspective", m_camera.getPerspective());
-		WriteArgument("autoExposure", m_camera.getAutoExposure() ? 1 : 0);                
-		
+		WriteArgument("autoExposure", m_camera.getAutoExposure() ? 1 : 0);    
+                WriteArgument("startButton", m_img_process.getStartButton() ? 1 : 0); 
+                WriteArgument("valueMin", m_img_process.getValueMin()); 
+                WriteArgument("valueMax", m_img_process.getValueMax());
+		WriteArgument("saturationMin", m_img_process.getSaturationMin());
+                
 	} else if (strncmp(header, "GetImage", 8) == 0) {
 		
 		cv::Mat* img = m_camera.GetLastPicture();

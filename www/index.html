@@ -23,8 +23,13 @@
 	<script src="js/functions.js"></script>
 	<script type="text/javascript">
 		<!--
+                var startButtonVal = 0;
+                
 		var inputValues = {
 			exposureTime: 10,
+                        valueMin: 20,
+                        valueMax: 255,
+                        saturationMin: 30,
 			colorType: "raw"
 		};
 		
@@ -119,12 +124,52 @@
 					</p>
 					<p>
 						<input type="checkbox" name="autoExposure" en="Auto Exposure" de="Automatische Belichtungszeit" onClick="autoExposureChanged(this.name, this.checked*1)">a<br>
+					</p>                                        	
+				</div>
+			</div>
+		</div>
+	</div>	
+
+        <div id="info-box" class="big-box">
+		<h3>
+			<span lang="de">Bildverarbeitung</span>
+			<span lang="en">Image Processing</span>
+		</h3>
+		<div class="split">
+			<div>
+				<div>
+					<p>
+						<div class="input" name="valueMin" id="valueMin-slider" type="slider" value="0 255">
+							<span lang="de">Helligkeit Min</span>
+							<span lang="en">Value Min</span>
+						</div><span id="valueMin-units"></span>
 					</p>
+					<p>
+						<div class="input" name="valueMax" id="valueMax-slider" type="slider" value="0 255">
+							<span lang="de">Helligkeit Max</span>
+							<span lang="en">Value Max</span>
+						</div><span id="valueMax-units"></span>
+					</p>
+					<p>
+						<div class="input" name="saturationMin" id="saturationMin-slider" type="slider" value="0 255">
+							<span lang="de">Sättigung Min</span>
+							<span lang="en">Saturation Min</span>
+						</div><span id="saturationMin-units"></span>
+					</p>
+				</div>
+			</div>
+			<div>
+				<div>
+					<p>
+						<button style="margin-left: 30px" id="startButton-id" type="submit" name="startButton" onclick="startButtonChanged(this.name, 1)">Start</button>
+					</p>
+				
 				</div>
 			</div>
 		</div>
 	</div>
-	<div id="info-box" class="big-box">
+    
+        <div id="info-box" class="big-box">
 		<h3>
 			<span lang="de">Informationen</span>
 			<span lang="en">Information</span>
@@ -172,7 +217,5 @@
 			</div>
 		</div>
 	</div>
-
-
 </body>
 </html>
